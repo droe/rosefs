@@ -1056,7 +1056,7 @@ rose_path_xlate(char *dst, size_t dstsz, const char *src, struct rose_ctx *ctx)
 
 /* Create a directory */
 int
-rose_mkdir(const char *path, mode_t mode)
+rose_op_mkdir(const char *path, mode_t mode)
 {
 	struct rose_ctx *ctx = (struct rose_ctx *) FUSE_CTX;
 	char bepath[PATH_MAX + 1];
@@ -1073,7 +1073,7 @@ rose_mkdir(const char *path, mode_t mode)
 
 /* Remove a directory */
 int
-rose_rmdir(const char *path)
+rose_op_rmdir(const char *path)
 {
 	struct rose_ctx *ctx = (struct rose_ctx *) FUSE_CTX;
 	char bepath[PATH_MAX + 1];
@@ -1090,7 +1090,7 @@ rose_rmdir(const char *path)
 
 /* Open directory */
 int
-rose_opendir(const char *path, struct fuse_file_info *fi)
+rose_op_opendir(const char *path, struct fuse_file_info *fi)
 {
 	struct rose_ctx *ctx = (struct rose_ctx *) FUSE_CTX;
 	struct rose_dctx *dctx;
@@ -1117,8 +1117,8 @@ rose_opendir(const char *path, struct fuse_file_info *fi)
 
 /* Read directory */
 int
-rose_readdir(const char *path UNUSED, void *buf, fuse_fill_dir_t fill,
-             off_t off, struct fuse_file_info *fi)
+rose_op_readdir(const char *path UNUSED, void *buf, fuse_fill_dir_t fill,
+                off_t off, struct fuse_file_info *fi)
 {
 	struct rose_ctx *ctx = (struct rose_ctx *) FUSE_CTX;
 	struct rose_dctx *dctx = (struct rose_dctx *) fi->fh;
@@ -1155,7 +1155,7 @@ rose_readdir(const char *path UNUSED, void *buf, fuse_fill_dir_t fill,
 /* Release directory
  * Error probably ignored too, like release(). */
 int
-rose_releasedir(const char *path UNUSED, struct fuse_file_info *fi)
+rose_op_releasedir(const char *path UNUSED, struct fuse_file_info *fi)
 {
 	struct rose_dctx *dctx = (struct rose_dctx *) fi->fh;
 	int rv;
@@ -1170,8 +1170,8 @@ rose_releasedir(const char *path UNUSED, struct fuse_file_info *fi)
 
 /* Synchronize directory contents */
 int
-rose_fsyncdir(const char *path UNUSED, int data UNUSED,
-              struct fuse_file_info *fi UNUSED)
+rose_op_fsyncdir(const char *path UNUSED, int data UNUSED,
+                 struct fuse_file_info *fi UNUSED)
 {
 	return 0;
 }
@@ -1183,8 +1183,8 @@ rose_fsyncdir(const char *path UNUSED, int data UNUSED,
 
 /* Get attributes from an open file */
 int
-rose_fgetattr(const char *path UNUSED, struct stat *buf,
-              struct fuse_file_info *fi)
+rose_op_fgetattr(const char *path UNUSED, struct stat *buf,
+                 struct fuse_file_info *fi)
 {
 	struct rose_fctx *fctx = (struct rose_fctx*) fi->fh;
 
@@ -1204,7 +1204,7 @@ rose_fgetattr(const char *path UNUSED, struct stat *buf,
 
 /* Get file attributes */
 int
-rose_getattr(const char *path, struct stat *st)
+rose_op_getattr(const char *path, struct stat *st)
 {
 	struct rose_ctx *ctx = (struct rose_ctx *) FUSE_CTX;
 	char bepath[PATH_MAX + 1];
@@ -1227,7 +1227,7 @@ rose_getattr(const char *path, struct stat *st)
 
 /* Change the size of an open file */
 int
-rose_ftruncate(const char *path UNUSED, off_t off, struct fuse_file_info *fi)
+rose_op_ftruncate(const char *path UNUSED, off_t off, struct fuse_file_info *fi)
 {
 	struct rose_ctx *ctx = (struct rose_ctx *) FUSE_CTX;
 	struct rose_fctx *fctx = (struct rose_fctx *) fi->fh;
@@ -1265,7 +1265,7 @@ rose_ftruncate(const char *path UNUSED, off_t off, struct fuse_file_info *fi)
 
 /* Change the size of a file */
 int
-rose_truncate(const char *path, off_t off)
+rose_op_truncate(const char *path, off_t off)
 {
 	struct rose_ctx *ctx = (struct rose_ctx *) FUSE_CTX;
 	char bepath[PATH_MAX + 1];
@@ -1324,7 +1324,7 @@ rose_truncate(const char *path, off_t off)
  * For every open, there will be exactly one release call.
  * Return value is ignored, it is not possible to return an error. */
 int
-rose_release(const char *path UNUSED, struct fuse_file_info *fi)
+rose_op_release(const char *path UNUSED, struct fuse_file_info *fi)
 {
 	struct rose_fctx *fctx = (struct rose_fctx *) fi->fh;
 	int rv;
@@ -1343,7 +1343,7 @@ rose_release(const char *path UNUSED, struct fuse_file_info *fi)
 /* File open operation
  * O_CREAT, O_EXCL, O_TRUNC are never passed to open() by default */
 int
-rose_open(const char *path, struct fuse_file_info *fi)
+rose_op_open(const char *path, struct fuse_file_info *fi)
 {
 	struct rose_ctx *ctx = (struct rose_ctx *) FUSE_CTX;
 	struct rose_fctx *fctx;
@@ -1395,7 +1395,7 @@ rose_open(const char *path, struct fuse_file_info *fi)
 
 /* Create and open a file */
 int
-rose_create(const char *path, mode_t mode, struct fuse_file_info *fi)
+rose_op_create(const char *path, mode_t mode, struct fuse_file_info *fi)
 {
 	struct rose_ctx *ctx = (struct rose_ctx *) FUSE_CTX;
 	struct rose_fctx *fctx;
@@ -1441,7 +1441,7 @@ rose_create(const char *path, mode_t mode, struct fuse_file_info *fi)
 /* Create a file node (non-dir, non-symlink)
  * if create is implemented, for regular files, create will called instead */
 int
-rose_mknod(const char *path, mode_t mode, dev_t dev)
+rose_op_mknod(const char *path, mode_t mode, dev_t dev)
 {
 	struct rose_ctx *ctx = (struct rose_ctx *) FUSE_CTX;
 	char bepath[PATH_MAX + 1];
@@ -1463,8 +1463,8 @@ rose_mknod(const char *path, mode_t mode, dev_t dev)
 
 /* Read data from an open file */
 int
-rose_read(const char *path UNUSED, char *buf, size_t count, off_t off,
-          struct fuse_file_info *fi)
+rose_op_read(const char *path UNUSED, char *buf, size_t count, off_t off,
+             struct fuse_file_info *fi)
 {
 	struct rose_ctx *ctx = (struct rose_ctx *) FUSE_CTX;
 	struct rose_fctx *fctx = (struct rose_fctx *) fi->fh;
@@ -1492,8 +1492,8 @@ rose_read(const char *path UNUSED, char *buf, size_t count, off_t off,
 
 /* Write data to an open file */
 int
-rose_write(const char *path UNUSED, const char *buf, size_t count, off_t off,
-           struct fuse_file_info *fi)
+rose_op_write(const char *path UNUSED, const char *buf, size_t count, off_t off,
+              struct fuse_file_info *fi)
 {
 	struct rose_ctx *ctx = (struct rose_ctx *) FUSE_CTX;
 	struct rose_fctx *fctx = (struct rose_fctx *) fi->fh;
@@ -1550,14 +1550,14 @@ rose_write(const char *path UNUSED, const char *buf, size_t count, off_t off,
 
 /* Possibly flush cached data */
 int
-rose_flush(const char *path UNUSED, struct fuse_file_info *fi UNUSED)
+rose_op_flush(const char *path UNUSED, struct fuse_file_info *fi UNUSED)
 {
 	return 0;
 }
 
 /* Synchronize file contents */
 int
-rose_fsync(const char *path UNUSED, int data, struct fuse_file_info *fi)
+rose_op_fsync(const char *path UNUSED, int data, struct fuse_file_info *fi)
 {
 	struct rose_fctx *fctx = (struct rose_fctx *) fi->fh;
 
@@ -1576,7 +1576,7 @@ rose_fsync(const char *path UNUSED, int data, struct fuse_file_info *fi)
 
 /* Read the target of a symbolic link */
 int
-rose_readlink(const char *path, char *buf, size_t bufsz)
+rose_op_readlink(const char *path, char *buf, size_t bufsz)
 {
 	struct rose_ctx *ctx = (struct rose_ctx *) FUSE_CTX;
 	char bepath[PATH_MAX + 1];
@@ -1597,7 +1597,7 @@ rose_readlink(const char *path, char *buf, size_t bufsz)
 
 /* Create a symbolic link */
 int
-rose_symlink(const char *linkpath, const char *path)
+rose_op_symlink(const char *linkpath, const char *path)
 {
 	struct rose_ctx *ctx = (struct rose_ctx *) FUSE_CTX;
 	char bepath[PATH_MAX + 1];
@@ -1619,7 +1619,7 @@ rose_symlink(const char *linkpath, const char *path)
 
 /* Rename a file */
 int
-rose_rename(const char *opath, const char *npath)
+rose_op_rename(const char *opath, const char *npath)
 {
 	struct rose_ctx *ctx = (struct rose_ctx *) FUSE_CTX;
 	char beopath[PATH_MAX + 1];
@@ -1640,7 +1640,7 @@ rose_rename(const char *opath, const char *npath)
 
 /* Create a hard link to a file */
 int
-rose_link(const char *linkpath, const char *path)
+rose_op_link(const char *linkpath, const char *path)
 {
 	struct rose_ctx *ctx = (struct rose_ctx *) FUSE_CTX;
 	char bepath[PATH_MAX + 1];
@@ -1661,7 +1661,7 @@ rose_link(const char *linkpath, const char *path)
 
 /* Remove a file */
 int
-rose_unlink(const char *path)
+rose_op_unlink(const char *path)
 {
 	struct rose_ctx *ctx = (struct rose_ctx *) FUSE_CTX;
 	char bepath[PATH_MAX + 1];
@@ -1679,7 +1679,7 @@ rose_unlink(const char *path)
 
 /* Check file access permissions */
 int
-rose_access(const char *path, int mode)
+rose_op_access(const char *path, int mode)
 {
 	struct rose_ctx *ctx = (struct rose_ctx *) FUSE_CTX;
 	char bepath[PATH_MAX + 1];
@@ -1697,7 +1697,7 @@ rose_access(const char *path, int mode)
 
 /* Change the permission bits of a file */
 int
-rose_chmod(const char *path, mode_t mode)
+rose_op_chmod(const char *path, mode_t mode)
 {
 	struct rose_ctx *ctx = (struct rose_ctx *) FUSE_CTX;
 	char bepath[PATH_MAX + 1];
@@ -1715,7 +1715,7 @@ rose_chmod(const char *path, mode_t mode)
 
 /* Change the owner and group of a file */
 int
-rose_chown(const char *path, uid_t uid, gid_t gid)
+rose_op_chown(const char *path, uid_t uid, gid_t gid)
 {
 	struct rose_ctx *ctx = (struct rose_ctx *) FUSE_CTX;
 	char bepath[PATH_MAX + 1];
@@ -1733,7 +1733,7 @@ rose_chown(const char *path, uid_t uid, gid_t gid)
 
 /* Change the access and modification times of a file */
 int
-rose_utime(const char *path, struct utimbuf *ut)
+rose_op_utime(const char *path, struct utimbuf *ut)
 {
 	struct rose_ctx *ctx = (struct rose_ctx *) FUSE_CTX;
 	char bepath[PATH_MAX + 1];
@@ -1768,8 +1768,8 @@ rose_utime(const char *path, struct utimbuf *ut)
 #if (__FreeBSD__ >= 10) || defined(__APPLE__)
 /* Set extended attributes */
 int
-rose_setxattr(const char *path, const char *name, const char *value,
-              size_t size, int flags, uint32_t pos)
+rose_op_setxattr(const char *path, const char *name, const char *value,
+                 size_t size, int flags, uint32_t pos)
 {
 	struct rose_ctx *ctx = (struct rose_ctx *) FUSE_CTX;
 	char bepath[PATH_MAX + 1];
@@ -1787,8 +1787,8 @@ rose_setxattr(const char *path, const char *name, const char *value,
 
 /* Get extended attributes */
 int
-rose_getxattr(const char *path, const char *name, char *value,
-              size_t size, uint32_t pos)
+rose_op_getxattr(const char *path, const char *name, char *value,
+                 size_t size, uint32_t pos)
 {
 	struct rose_ctx *ctx = (struct rose_ctx *) FUSE_CTX;
 	char bepath[PATH_MAX + 1];
@@ -1806,7 +1806,7 @@ rose_getxattr(const char *path, const char *name, char *value,
 
 /* List extended attributes */
 int
-rose_listxattr(const char *path, char *list, size_t size)
+rose_op_listxattr(const char *path, char *list, size_t size)
 {
 	struct rose_ctx *ctx = (struct rose_ctx *) FUSE_CTX;
 	char bepath[PATH_MAX + 1];
@@ -1824,7 +1824,7 @@ rose_listxattr(const char *path, char *list, size_t size)
 
 /* Remove extended attributes */
 int
-rose_removexattr(const char *path, const char *name)
+rose_op_removexattr(const char *path, const char *name)
 {
 	struct rose_ctx *ctx = (struct rose_ctx *) FUSE_CTX;
 	char bepath[PATH_MAX + 1];
@@ -1852,7 +1852,7 @@ rose_removexattr(const char *path, const char *name)
 /* Initialize filesystem
  * Return value will be passed in private_data to all operations. */
 void *
-rose_init(struct fuse_conn_info *conn UNUSED)
+rose_op_init(struct fuse_conn_info *conn UNUSED)
 {
 	struct rose_ictx *ictx = (struct rose_ictx *) FUSE_CTX;
 	struct rose_ctx *ctx;
@@ -1881,7 +1881,7 @@ leave:
 
 /* Clean up filesystem */
 void
-rose_destroy(void *stuff)
+rose_op_destroy(void *stuff)
 {
 	struct rose_ctx *ctx = (struct rose_ctx *) stuff;
 
@@ -1895,7 +1895,7 @@ rose_destroy(void *stuff)
 
 /* Get file system statistics */
 int
-rose_statfs(const char *path, struct statvfs *stat)
+rose_op_statfs(const char *path, struct statvfs *stat)
 {
 	struct rose_ctx *ctx = (struct rose_ctx *) FUSE_CTX;
 	char bepath[PATH_MAX + 1];
@@ -1920,42 +1920,42 @@ rose_statfs(const char *path, struct statvfs *stat)
  * FUSE glue
  */
 struct fuse_operations rose_oper = {
-	.access		= rose_access,
-	.chmod		= rose_chmod,
-	.chown		= rose_chown,
-	.create		= rose_create,
-	.destroy	= rose_destroy,
-	.fgetattr	= rose_fgetattr,
-	.flush		= rose_flush,
-	.fsync		= rose_fsync,
-	.fsyncdir	= rose_fsyncdir,
-	.ftruncate	= rose_ftruncate,
-	.getattr	= rose_getattr,
-/*	.getxattr	= rose_getxattr, */
-	.init		= rose_init,
-/*	.ioctl		= rose_ioctl, */
-	.link		= rose_link,
-/*	.listxattr	= rose_listxattr, */
-	.mkdir		= rose_mkdir,
-	.mknod		= rose_mknod,
-	.open		= rose_open,
-	.opendir	= rose_opendir,
-/*	.poll		= rose_poll, */
-	.read		= rose_read,
-	.readdir	= rose_readdir,
-	.readlink	= rose_readlink,
-	.release	= rose_release,
-	.releasedir	= rose_releasedir,
-/*	.removexattr	= rose_removexattr, */
-	.rename		= rose_rename,
-	.rmdir		= rose_rmdir,
-/*	.setxattr	= rose_setxattr, */
-	.statfs		= rose_statfs,
-	.symlink	= rose_symlink,
-	.truncate	= rose_truncate,
-	.unlink		= rose_unlink,
-	.utime		= rose_utime,
-	.write		= rose_write,
+	.access		= rose_op_access,
+	.chmod		= rose_op_chmod,
+	.chown		= rose_op_chown,
+	.create		= rose_op_create,
+	.destroy	= rose_op_destroy,
+	.fgetattr	= rose_op_fgetattr,
+	.flush		= rose_op_flush,
+	.fsync		= rose_op_fsync,
+	.fsyncdir	= rose_op_fsyncdir,
+	.ftruncate	= rose_op_ftruncate,
+	.getattr	= rose_op_getattr,
+/*	.getxattr	= rose_op_getxattr, */
+	.init		= rose_op_init,
+/*	.ioctl		= rose_op_ioctl, */
+	.link		= rose_op_link,
+/*	.listxattr	= rose_op_listxattr, */
+	.mkdir		= rose_op_mkdir,
+	.mknod		= rose_op_mknod,
+	.open		= rose_op_open,
+	.opendir	= rose_op_opendir,
+/*	.poll		= rose_op_poll, */
+	.read		= rose_op_read,
+	.readdir	= rose_op_readdir,
+	.readlink	= rose_op_readlink,
+	.release	= rose_op_release,
+	.releasedir	= rose_op_releasedir,
+/*	.removexattr	= rose_op_removexattr, */
+	.rename		= rose_op_rename,
+	.rmdir		= rose_op_rmdir,
+/*	.setxattr	= rose_op_setxattr, */
+	.statfs		= rose_op_statfs,
+	.symlink	= rose_op_symlink,
+	.truncate	= rose_op_truncate,
+	.unlink		= rose_op_unlink,
+	.utime		= rose_op_utime,
+	.write		= rose_op_write,
 };
 
 
