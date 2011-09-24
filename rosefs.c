@@ -1227,7 +1227,8 @@ rose_op_getattr(const char *path, struct stat *st)
 
 /* Change the size of an open file */
 int
-rose_op_ftruncate(const char *path UNUSED, off_t off, struct fuse_file_info *fi)
+rose_op_ftruncate(const char *path UNUSED, off_t off,
+                  struct fuse_file_info *fi)
 {
 	struct rose_ctx *ctx = (struct rose_ctx *) FUSE_CTX;
 	struct rose_fctx *fctx = (struct rose_fctx *) fi->fh;
@@ -1492,8 +1493,8 @@ rose_op_read(const char *path UNUSED, char *buf, size_t count, off_t off,
 
 /* Write data to an open file */
 int
-rose_op_write(const char *path UNUSED, const char *buf, size_t count, off_t off,
-              struct fuse_file_info *fi)
+rose_op_write(const char *path UNUSED, const char *buf, size_t count,
+              off_t off, struct fuse_file_info *fi)
 {
 	struct rose_ctx *ctx = (struct rose_ctx *) FUSE_CTX;
 	struct rose_fctx *fctx = (struct rose_fctx *) fi->fh;
@@ -1607,7 +1608,8 @@ rose_op_symlink(const char *linkpath, const char *path)
 	if (!ctx)
 		return -ENXIO;
 
-	if ((n = rose_path_encrypt(belinkpath, sizeof(belinkpath) - 1, linkpath, strlen(linkpath), ctx)) < 0)
+	if ((n = rose_path_encrypt(belinkpath, sizeof(belinkpath) - 1,
+	                           linkpath, strlen(linkpath), ctx)) < 0)
 		return n;
 	belinkpath[n] = '\0';
 	if ((n = rose_path_xlate(bepath, sizeof(bepath), path, ctx)) < 0)
@@ -1650,7 +1652,8 @@ rose_op_link(const char *linkpath, const char *path)
 	if (!ctx)
 		return -ENXIO;
 
-	if ((n = rose_path_xlate(belinkpath, sizeof(belinkpath), linkpath, ctx)) < 0)
+	if ((n = rose_path_xlate(belinkpath, sizeof(belinkpath),
+	                         linkpath, ctx)) < 0)
 		return n;
 	if ((n = rose_path_xlate(bepath, sizeof(bepath), path, ctx)) < 0)
 		return n;
@@ -1799,7 +1802,8 @@ rose_op_getxattr(const char *path, const char *name, char *value,
 
 	if ((n = rose_path_xlate(bepath, sizeof(bepath), path, ctx)) < 0)
 		return n;
-	if ((n = getxattr(bepath, name, value, size, pos, XATTR_NOFOLLOW)) == -1)
+	if ((n = getxattr(bepath, name, value, size, pos,
+	                  XATTR_NOFOLLOW)) == -1)
 		return -errno;
 	return n;
 }
