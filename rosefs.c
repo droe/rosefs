@@ -2080,6 +2080,17 @@ rose_backend_load(struct rose_ictx *ictx, const char *backend,
 	return 0;
 }
 
+/* perform self-tests of crypto primitives */
+void
+rose_selftest(void)
+{
+	assert(!rose_hmac_sha256_test());
+	assert(!rose_pkcs5_pbkdf2_test());
+	assert(!rose_cbc_test());
+	assert(!rose_ctr_test());
+	assert(!rose_base32_test());
+}
+
 /* The actual entry point. */
 int
 main(int argc, char *argv[])
@@ -2094,12 +2105,7 @@ main(int argc, char *argv[])
 	char *passwd;
 	struct rose_ictx *ictx;
 
-	/* run self-tests of crypto primitives */
-	assert(!rose_hmac_sha256_test());
-	assert(!rose_pkcs5_pbkdf2_test());
-	assert(!rose_cbc_test());
-	assert(!rose_ctr_test());
-	assert(!rose_base32_test());
+	rose_selftest();
 
 	/* verify arguments */
 	if (argc < 3) {
