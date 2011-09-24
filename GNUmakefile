@@ -3,7 +3,7 @@ TARGETVER=	0
 PREFIX?=	/usr/local
 LOCALBASE?=	$(PREFIX)
 
-CFLAGS?=	-g -O2 -Wall -Wextra -pedantic
+CFLAGS?=	-g -O2 -Wall -Wextra -pedantic -Werror
 LIBS=
 
 #CFLAGS+=	-DNDEBUG
