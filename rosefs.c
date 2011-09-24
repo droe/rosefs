@@ -227,6 +227,21 @@ static const unsigned char zeroes[CHUNK_SIZE] = { 0 };
 
 
 /*
+ * general utility functions
+ */
+
+/* overwrite string s with zeroes in a single pass */
+static void
+rose_strzero(void *s)
+{
+	char *p = (char *)s;
+	while (*p) {
+		*(p++) = '\0';
+	}
+}
+
+
+/*
  * encoding primitives
  */
 
@@ -2231,7 +2246,7 @@ main(int argc, char *argv[])
 		goto leave_enomem;
 	}
 	rv = rose_backend_load(ictx, pathbuf, passwd);
-	memset(passwd, 0, strlen(passwd));
+	rose_strzero(passwd);
 	if (rv < 0) {
 		free(ictx->backend);
 		free(ictx);
