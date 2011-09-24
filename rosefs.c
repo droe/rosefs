@@ -1970,17 +1970,17 @@ struct fuse_operations rose_oper = {
 /* Read some bytes from a file, used for configuration files.
  * Pathbuf must be slash-terminated.
  * Returns number of characters read, or a negative errno. */
-static int
+static ssize_t
 rose_read_file(unsigned char *buf, size_t bufsz,
                const char *pathbuf, const char *filename) {
 	char fn[PATH_MAX];
-	int fd, rv;
 	ssize_t n;
+	int fd;
 
-	rv = snprintf(fn, sizeof(fn), "%s%s", pathbuf, filename);
-	if (rv >= (int)sizeof(fn))
+	n = snprintf(fn, sizeof(fn), "%s%s", pathbuf, filename);
+	if (n >= (ssize_t)sizeof(fn))
 		return -ENAMETOOLONG;
-	if (rv == -1)
+	if (n == -1)
 		return -errno;
 
 	fd = open(fn, O_RDONLY);
@@ -2000,17 +2000,17 @@ rose_read_file(unsigned char *buf, size_t bufsz,
 /* Write some bytes to a file, used for configuration files.
  * Pathbuf must be slash-terminated.
  * Returns number of characters written, or a negative errno. */
-static int
+static ssize_t
 rose_write_file(const unsigned char *buf, size_t bufsz,
                 const char *pathbuf, const char *filename) {
 	char fn[PATH_MAX];
-	int fd, rv;
 	ssize_t n;
+	int fd;
 
-	rv = snprintf(fn, sizeof(fn), "%s%s", pathbuf, filename);
-	if (rv >= (int)sizeof(fn))
+	n = snprintf(fn, sizeof(fn), "%s%s", pathbuf, filename);
+	if (n >= (ssize_t)sizeof(fn))
 		return -ENAMETOOLONG;
-	if (rv == -1)
+	if (n == -1)
 		return -errno;
 
 	fd = open(fn, O_WRONLY|O_TRUNC|O_CREAT, 0400);
@@ -2032,30 +2032,30 @@ rose_write_file(const unsigned char *buf, size_t bufsz,
 static int
 rose_backend_initialize(const char *backend)
 {
-	unsigned char version[] = "RoseFS/" Q(ROSE_VER) "." Q(ROSE_REV) "\n";
+	unsigned char vstr[] = "RoseFS/" Q(ROSE_VER) "." Q(ROSE_REV) "\n";
 	unsigned char salt[KEY_SIZE];
-	int rv;
+	ssize_t rv;
 
 	rose_random_init();
 
-	rv = rose_write_file(version, sizeof(version)-1, backend, ".version");
+	rv = rose_write_file(vstr, sizeof(vstr) - 1, backend, ".version");
 	if (rv < 0)
 		return rv;
-	if (rv < (int)(sizeof(version) - 1))
+	if (rv < (ssize_t)(sizeof(vstr) - 1))
 		return -EIO;
 
 	rose_random(salt, KEY_SIZE);
 	rv = rose_write_file(salt, sizeof(salt), backend, ".name_salt");
 	if (rv < 0)
 		return rv;
-	if (rv < (int)sizeof(salt))
+	if (rv < (ssize_t)sizeof(salt))
 		return -EIO;
 
 	rose_random(salt, KEY_SIZE);
 	rv = rose_write_file(salt, sizeof(salt), backend, ".data_salt");
 	if (rv < 0)
 		return rv;
-	if (rv < (int)sizeof(salt))
+	if (rv < (ssize_t)sizeof(salt))
 		return -EIO;
 
 	/* XXX write more files here */
@@ -2072,12 +2072,12 @@ rose_backend_load(struct rose_ictx *ictx, const char *backend,
 {
 	unsigned char salt[KEY_SIZE];
 	size_t passwdsz;
-	int rv;
+	ssize_t rv;
 
 	passwdsz = strlen(passwd);
 
 	rv = rose_read_file(salt, sizeof(salt), backend, ".name_salt");
-	if (rv < (int)sizeof(salt))
+	if (rv < (ssize_t)sizeof(salt))
 		return rv;
 	rose_pkcs5_pbkdf2(ictx->name_keybuf, sizeof(ictx->name_keybuf),
 	                  passwd, passwdsz, salt, sizeof(salt), PBKDF2_ROUNDS);
@@ -2085,7 +2085,7 @@ rose_backend_load(struct rose_ictx *ictx, const char *backend,
 	/* XXX verify key against .name_chk := ^^uint32 of SHA256 of key */
 
 	rv = rose_read_file(salt, sizeof(salt), backend, ".data_salt");
-	if (rv < (int)sizeof(salt))
+	if (rv < (ssize_t)sizeof(salt))
 		return rv;
 	rose_pkcs5_pbkdf2(ictx->data_keybuf, sizeof(ictx->data_keybuf),
 	                  passwd, passwdsz, salt, sizeof(salt), PBKDF2_ROUNDS);
