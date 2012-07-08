@@ -1774,7 +1774,7 @@ rose_op_utime(const char *path, struct utimbuf *ut)
  * com.apple.quarantine - encrypt + rename
  */
 
-#if (__FreeBSD__ >= 10) || defined(__APPLE__)
+#ifdef __APPLE__
 /* Set extended attributes */
 int
 rose_op_setxattr(const char *path, const char *name, const char *value,
@@ -1849,9 +1849,9 @@ rose_op_removexattr(const char *path, const char *name)
 		return -errno;
 	return 0;
 }
-#else /* __FreeBSD__ >= 10 || defined(__APPLE__) */
+#else /* __APPLE__ */
 #error Not implemented
-#endif /* __FreeBSD__ >= 10 || defined(__APPLE__) */
+#endif /* __APPLE__ */
 #endif
 
 
