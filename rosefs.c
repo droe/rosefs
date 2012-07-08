@@ -59,7 +59,7 @@
  *     It should be able to use case insensitive filesystems as storage
  *     backend, such as HFS+ on MacOS X.  It should fail gracefully.
  *
- *     Security with focus on confidentiality:
+ *     Security with focus on static confidentiality:
  *     The filesystem should use a proven cryptographic design based on proven
  *     cryptographic algorithms.  No home-grown crypto primitives or dubious
  *     modifications of algorithms, modes or protocols.  In it's current
@@ -134,6 +134,12 @@
  *     file and directory names.  This in turn means that the virtual
  *     RoseFS filesystem will have somewhat lower name limits than the
  *     system's PATH_MAX and NAME_MAX.
+ *
+ *     Files being written to keep their nonce in order to prevent
+ *     reencryption of whole files for each write call.  As a consequence,
+ *     attackers with the ability to write chosen data into the backend, or
+ *     to observe the encrypted backend over write operations, can recover
+ *     the keystream for the particular file, or parts of it.
  *
  *     The filename encryption uses a global, constant IV.  This means that
  *     files with the same name will get encrypted to the same encrypted
