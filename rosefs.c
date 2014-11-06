@@ -27,6 +27,11 @@
  */
 
 /*
+ * This code is EXPERIMENTAL.
+ * Do not rely on it with your economic success or even your life.
+ */
+
+/*
  * Build on MacOS X:
  *
  * % export PKG_CONFIG_PATH=/usr/local/lib/pkgconfig
@@ -93,9 +98,6 @@
  *     kernel entropy pool via /dev/urandom.  Some additional seeding is
  *     done when initializing RoseFS.  The arc4random() generator is
  *     generally considered to provide randomness suitable for crypto use.
- *     Note that we mainly rely upon the generator's collision-resistance,
- *     not it's unpredictability, since the latter is ultimately based in
- *     the password, not in openly visible nonces, salts or IVs.
  *
  *     Encryption of file content:
  *     AES-256 in CTR mode and per-file random nonce.  A 64-bit block
