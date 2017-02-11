@@ -2150,7 +2150,7 @@ main(int argc, char *argv[])
 		fprintf(stderr, "%s - %s\n", pathbuf, strerror(ENAMETOOLONG));
 		return EXIT_FAILURE;
 	}
-	if (pathbuf[pathlen - 2] != '/') {
+	if (pathbuf[pathlen - 1] != '/') {
 		strcat(pathbuf, "/");
 		pathlen++;
 	}
