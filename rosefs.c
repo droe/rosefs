@@ -733,7 +733,7 @@ rose_ctr_crypt(unsigned char *dst, const unsigned char *src, size_t sz,
 		}
 	}
 
-	while (i < sz - AES_BLOCK_SIZE) {
+	while (i + AES_BLOCK_SIZE <= sz) {
 		AES_encrypt(block, keystream, key);
 		(*(uint64_t *)block)++;
 		*(uint64_t*)(dst+i) = *(uint64_t*)(src+i)
