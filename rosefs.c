@@ -190,7 +190,6 @@
 #define KEY_SIZE	(KEY_BITS/8)
 #define PBKDF2_ROUNDS	8192
 #define CHUNK_SIZE	1024
-#define ROSE_PATH	"/usr/libexec:/usr/local/libexec"
 
 #ifndef HAVE_FDATASYNC
 #define fdatasync(x) fsync(x)
@@ -2225,7 +2224,8 @@ main(int argc, char *argv[])
 				        strerror(errno));
 				return EXIT_FAILURE;
 			}
-			execvP(pathbuf, ROSE_PATH, argv);
+#ifdef ROSE_PATH
+			execvP(pathbuf, Q(ROSE_PATH), argv);
 			if (errno != ENOENT) {
 				fprintf(stderr, "executing %s - %s", pathbuf,
 				        strerror(errno));
@@ -2233,7 +2233,12 @@ main(int argc, char *argv[])
 			}
 			fprintf(stderr, "%s was not found in PATH or '%s'.\n"
 				"No compatible version of RoseFS found.\n",
-				pathbuf, ROSE_PATH);
+				pathbuf, Q(ROSE_PATH));
+#else
+			fprintf(stderr, "%s was not found in PATH.\n"
+				"No compatible version of RoseFS found.\n",
+				pathbuf);
+#endif
 			return EXIT_FAILURE;
 		}
 	}
