@@ -2141,6 +2141,14 @@ rose_selftest(void)
 	assert(!rose_base32_test());
 }
 
+static void
+rose_discard_line() {
+	int ch;
+	do {
+		ch = getchar();
+	} while (ch != EOF && ch != '\n');
+}
+
 /* The actual entry point. */
 int
 main(int argc, char *argv[])
@@ -2215,7 +2223,7 @@ main(int argc, char *argv[])
 		       "Press enter to initialize new backend or ^C to abort.",
 		       pathbuf);
 		fflush(stdout);
-		getpass("");
+		rose_discard_line();
 		rv = rose_backend_initialize(pathbuf);
 		if (rv < 0) {
 			fprintf(stderr, "initializing %s - %s\n",
