@@ -190,7 +190,6 @@
 #define KEY_SIZE	(KEY_BITS/8)
 #define PBKDF2_ROUNDS	8192
 #define CHUNK_SIZE	1024
-#define ROSE_PATH	"/usr/libexec:/usr/local/libexec"
 
 #ifndef HAVE_FDATASYNC
 #define fdatasync(x) fsync(x)
@@ -711,44 +710,53 @@ rose_random(unsigned char *rnd, size_t sz)
 	}
 }
 
+static void
+rose_xor_block(unsigned char *restrict dst, const unsigned char *restrict src) {
+	for (int i = 0; i < AES_BLOCK_SIZE; ++i) {
+		dst[i] ^= src[i];
+	}
+}
+
 /* (in-place) CTR encryption and decryption of arbitrary sized buffers */
 static void
 rose_ctr_crypt(unsigned char *dst, const unsigned char *src, size_t sz,
-               off_t off, unsigned char nonce[AES_BLOCK_SIZE], AES_KEY *key)
+               off_t off, const unsigned char nonce[AES_BLOCK_SIZE], AES_KEY *key)
 {
-	unsigned char block[AES_BLOCK_SIZE];
+	uint64_t block[2];
 	unsigned char keystream[AES_BLOCK_SIZE];
 	uint64_t i;
 
+	if (src != dst) {
+		memmove(dst, src, sz);
+	}
+
+	assert(sizeof(block) == AES_BLOCK_SIZE);
 	memcpy(block, nonce, AES_BLOCK_SIZE);
-	*(uint64_t *)block += off / AES_BLOCK_SIZE;
+	block[0] += off / AES_BLOCK_SIZE;
 
 	i = 0;
 	if (off % AES_BLOCK_SIZE) {
-		AES_encrypt(block, keystream, key);
-		(*(uint64_t *)block)++;
-		while (i < (uint64_t) off % AES_BLOCK_SIZE) {
-			dst[i] = src[i] ^ keystream[(off+i) % AES_BLOCK_SIZE];
+		AES_encrypt((unsigned char*)block, keystream, key);
+		block[0]++;
+		for (int n = AES_BLOCK_SIZE - off % AES_BLOCK_SIZE; n > 0; n--) {
+			dst[i] ^= keystream[(off+i) % AES_BLOCK_SIZE];
 			i++;
 		}
 	}
+	assert((off+i)%AES_BLOCK_SIZE == 0);
 
-	while (i < sz - AES_BLOCK_SIZE) {
-		AES_encrypt(block, keystream, key);
-		(*(uint64_t *)block)++;
-		*(uint64_t*)(dst+i) = *(uint64_t*)(src+i)
-			^ *(uint64_t*)(keystream+((off+i) % AES_BLOCK_SIZE));
-		i += 8;
-		*(uint64_t*)(dst+i) = *(uint64_t*)(src+i)
-			^ *(uint64_t*)(keystream+((off+i) % AES_BLOCK_SIZE));
-		i += 8;
+	while (i + AES_BLOCK_SIZE <= sz) {
+		AES_encrypt((unsigned char*)block, keystream, key);
+		block[0]++;
+		rose_xor_block(dst + i, keystream);
+		i += AES_BLOCK_SIZE;
 	}
 
 	if (i < sz) {
-		AES_encrypt(block, keystream, key);
-		(*(uint64_t *)block)++;
+		AES_encrypt((unsigned char*)block, keystream, key);
+		block[0]++;
 		while (i < sz) {
-			dst[i] = src[i] ^ keystream[(off+i) % AES_BLOCK_SIZE];
+			dst[i] ^= keystream[(off+i) % AES_BLOCK_SIZE];
 			i++;
 		}
 	}
@@ -767,6 +775,30 @@ rose_ctr_test()
 		rose_ctr_crypt(buf, buf, 1000, 13, zeroes, &key);
 	}
 */
+	unsigned char key_bytes[256];
+	for (int i = 0; i < 256; i++) {
+		key_bytes[i] = i;
+	}
+	AES_KEY key;
+	AES_set_encrypt_key(key_bytes, 256, &key);
+
+	unsigned char input[AES_BLOCK_SIZE*4];
+	unsigned char output[AES_BLOCK_SIZE*4];
+	unsigned char buffer[AES_BLOCK_SIZE*4];
+	for (size_t i = 0; i < sizeof(input); i++) {
+		input[i] = i & 0xff;
+	}
+	rose_ctr_crypt(output, input, sizeof(input), 0, zeroes, &key);
+
+	for (size_t i = 0; i <= sizeof(input); i++) {
+		for (size_t n = 0; i + n <= sizeof(input); n++) {
+			rose_ctr_crypt(buffer, input + i, n, i, zeroes, &key);
+			if (memcmp(buffer, output + i, n) != 0) {
+				return -1;
+			}
+		}
+	}
+
 	return 0;
 }
 #endif
@@ -2118,6 +2150,14 @@ rose_selftest(void)
 	assert(!rose_base32_test());
 }
 
+static void
+rose_discard_line() {
+	int ch;
+	do {
+		ch = getchar();
+	} while (ch != EOF && ch != '\n');
+}
+
 /* The actual entry point. */
 int
 main(int argc, char *argv[])
@@ -2150,7 +2190,7 @@ main(int argc, char *argv[])
 		fprintf(stderr, "%s - %s\n", pathbuf, strerror(ENAMETOOLONG));
 		return EXIT_FAILURE;
 	}
-	if (pathbuf[pathlen - 2] != '/') {
+	if (pathbuf[pathlen - 1] != '/') {
 		strcat(pathbuf, "/");
 		pathlen++;
 	}
@@ -2192,7 +2232,7 @@ main(int argc, char *argv[])
 		       "Press enter to initialize new backend or ^C to abort.",
 		       pathbuf);
 		fflush(stdout);
-		getpass("");
+		rose_discard_line();
 		rv = rose_backend_initialize(pathbuf);
 		if (rv < 0) {
 			fprintf(stderr, "initializing %s - %s\n",
@@ -2225,7 +2265,8 @@ main(int argc, char *argv[])
 				        strerror(errno));
 				return EXIT_FAILURE;
 			}
-			execvP(pathbuf, ROSE_PATH, argv);
+#ifdef ROSE_PATH
+			execvP(pathbuf, Q(ROSE_PATH), argv);
 			if (errno != ENOENT) {
 				fprintf(stderr, "executing %s - %s", pathbuf,
 				        strerror(errno));
@@ -2233,7 +2274,12 @@ main(int argc, char *argv[])
 			}
 			fprintf(stderr, "%s was not found in PATH or '%s'.\n"
 				"No compatible version of RoseFS found.\n",
-				pathbuf, ROSE_PATH);
+				pathbuf, Q(ROSE_PATH));
+#else
+			fprintf(stderr, "%s was not found in PATH.\n"
+				"No compatible version of RoseFS found.\n",
+				pathbuf);
+#endif
 			return EXIT_FAILURE;
 		}
 	}
