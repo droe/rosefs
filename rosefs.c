@@ -710,6 +710,13 @@ rose_random(unsigned char *rnd, size_t sz)
 	}
 }
 
+static void
+rose_xor_block(unsigned char *restrict dst, const unsigned char *restrict src) {
+	for (int i = 0; i < AES_BLOCK_SIZE; ++i) {
+		dst[i] ^= src[i];
+	}
+}
+
 /* (in-place) CTR encryption and decryption of arbitrary sized buffers */
 static void
 rose_ctr_crypt(unsigned char *dst, const unsigned char *src, size_t sz,
@@ -718,6 +725,10 @@ rose_ctr_crypt(unsigned char *dst, const unsigned char *src, size_t sz,
 	uint64_t block[2];
 	unsigned char keystream[AES_BLOCK_SIZE];
 	uint64_t i;
+
+	if (src != dst) {
+		memmove(dst, src, sz);
+	}
 
 	assert(sizeof(block) == AES_BLOCK_SIZE);
 	memcpy(block, nonce, AES_BLOCK_SIZE);
@@ -728,27 +739,24 @@ rose_ctr_crypt(unsigned char *dst, const unsigned char *src, size_t sz,
 		AES_encrypt((unsigned char*)block, keystream, key);
 		block[0]++;
 		for (int n = AES_BLOCK_SIZE - off % AES_BLOCK_SIZE; n > 0; n--) {
-			dst[i] = src[i] ^ keystream[(off+i) % AES_BLOCK_SIZE];
+			dst[i] ^= keystream[(off+i) % AES_BLOCK_SIZE];
 			i++;
 		}
 	}
+	assert((off+i)%AES_BLOCK_SIZE == 0);
 
 	while (i + AES_BLOCK_SIZE <= sz) {
 		AES_encrypt((unsigned char*)block, keystream, key);
 		block[0]++;
-		*(uint64_t*)(dst+i) = *(uint64_t*)(src+i)
-			^ *(uint64_t*)(keystream+((off+i) % AES_BLOCK_SIZE));
-		i += 8;
-		*(uint64_t*)(dst+i) = *(uint64_t*)(src+i)
-			^ *(uint64_t*)(keystream+((off+i) % AES_BLOCK_SIZE));
-		i += 8;
+		rose_xor_block(dst + i, keystream);
+		i += AES_BLOCK_SIZE;
 	}
 
 	if (i < sz) {
 		AES_encrypt((unsigned char*)block, keystream, key);
 		block[0]++;
 		while (i < sz) {
-			dst[i] = src[i] ^ keystream[(off+i) % AES_BLOCK_SIZE];
+			dst[i] ^= keystream[(off+i) % AES_BLOCK_SIZE];
 			i++;
 		}
 	}
