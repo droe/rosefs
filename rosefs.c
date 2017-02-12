@@ -715,17 +715,18 @@ static void
 rose_ctr_crypt(unsigned char *dst, const unsigned char *src, size_t sz,
                off_t off, const unsigned char nonce[AES_BLOCK_SIZE], AES_KEY *key)
 {
-	unsigned char block[AES_BLOCK_SIZE];
+	uint64_t block[2];
 	unsigned char keystream[AES_BLOCK_SIZE];
 	uint64_t i;
 
+	assert(sizeof(block) == AES_BLOCK_SIZE);
 	memcpy(block, nonce, AES_BLOCK_SIZE);
-	*(uint64_t *)block += off / AES_BLOCK_SIZE;
+	block[0] += off / AES_BLOCK_SIZE;
 
 	i = 0;
 	if (off % AES_BLOCK_SIZE) {
-		AES_encrypt(block, keystream, key);
-		(*(uint64_t *)block)++;
+		AES_encrypt((unsigned char*)block, keystream, key);
+		block[0]++;
 		for (int n = AES_BLOCK_SIZE - off % AES_BLOCK_SIZE; n > 0; n--) {
 			dst[i] = src[i] ^ keystream[(off+i) % AES_BLOCK_SIZE];
 			i++;
@@ -733,8 +734,8 @@ rose_ctr_crypt(unsigned char *dst, const unsigned char *src, size_t sz,
 	}
 
 	while (i + AES_BLOCK_SIZE <= sz) {
-		AES_encrypt(block, keystream, key);
-		(*(uint64_t *)block)++;
+		AES_encrypt((unsigned char*)block, keystream, key);
+		block[0]++;
 		*(uint64_t*)(dst+i) = *(uint64_t*)(src+i)
 			^ *(uint64_t*)(keystream+((off+i) % AES_BLOCK_SIZE));
 		i += 8;
@@ -744,8 +745,8 @@ rose_ctr_crypt(unsigned char *dst, const unsigned char *src, size_t sz,
 	}
 
 	if (i < sz) {
-		AES_encrypt(block, keystream, key);
-		(*(uint64_t *)block)++;
+		AES_encrypt((unsigned char*)block, keystream, key);
+		block[0]++;
 		while (i < sz) {
 			dst[i] = src[i] ^ keystream[(off+i) % AES_BLOCK_SIZE];
 			i++;
