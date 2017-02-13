@@ -1,6 +1,6 @@
 /*
  * RoseFS/0.0 - Rock-Solid Encrypted File System, Version 0, Revision 0
- * Copyright (c) 2010-2011, Daniel Roethlisberger <daniel@roe.ch>
+ * Copyright (c) 2010-2011,2017 Daniel Roethlisberger <daniel@roe.ch>
  * All rights reserved.
  * http://www.roe.ch/RoseFS
  *
@@ -150,6 +150,9 @@
  *     should consider encrypted filesystems with a single file backend.
  *     The same argument holds for file attributes such as size, owner,
  *     group and permissions.
+ *
+ * AUTHORS
+ *     Written by Daniel Roethlisberger, with contributions by Maks Verver.
  */
 
 /*
