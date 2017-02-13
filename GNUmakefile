@@ -8,6 +8,7 @@ LIBS=
 
 #CFLAGS+=	-DNDEBUG
 #CFLAGS+=	-DHAVE_FDATASYNC
+#CFLAGS+=	-DROSE_PATH=/usr/libexec:/usr/local/libexec
 
 UNAME:=		$(shell uname)
 ifeq ($(UNAME), Darwin)
