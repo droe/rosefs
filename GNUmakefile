@@ -21,7 +21,7 @@ endif
 PC_CFLAGS:=	$(shell PKG_CONFIG_PATH=$(LOCALBASE)/lib/pkgconfig pkg-config --cflags fuse openssl)
 PC_LIBS:=	$(shell PKG_CONFIG_PATH=$(LOCALBASE)/lib/pkgconfig pkg-config --libs fuse openssl)
 
-CFLAGS+=	-std=c99 $(PC_CFLAGS)
+CFLAGS+=	-std=c99 -fno-strict-aliasing $(PC_CFLAGS)
 LIBS+=		$(PC_LIBS)
 
 # debugging
